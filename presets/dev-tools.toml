@@ -1,0 +1,96 @@
+# Common CLI development tools preset.
+# Import with: oss-version preset import dev-tools
+
+[[component]]
+name = "rtk"
+desc = "Rust Token Killer，CLI 输出压缩代理"
+binary = "rtk"
+local_cmd = "rtk --version"
+local_regex = '(?:rtk\s+)?(\d+\.\d+\.\d+)'
+upgrade_cmd = 'curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh'
+upgrade_note = "rtk 官方 install.sh"
+
+[component.latest]
+type = "github_release"
+repo = "rtk-ai/rtk"
+tag_prefix = "v"
+
+[[component]]
+name = "codegraph"
+desc = "代码符号知识图谱 MCP server"
+binary = "codegraph"
+local_cmd = "codegraph version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'codegraph upgrade'
+upgrade_note = "codegraph 自带升级器"
+
+[component.latest]
+type = "builtin_check"
+cmd = "codegraph upgrade --check"
+regex = 'latest\s+v?(\d+\.\d+\.\d+)'
+
+[[component]]
+name = "gh"
+desc = "GitHub CLI"
+binary = "gh"
+local_cmd = "gh --version"
+local_regex = 'gh\s+version\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade gh'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "gh"
+
+[[component]]
+name = "fzf"
+desc = "Command-line fuzzy finder"
+binary = "fzf"
+local_cmd = "fzf --version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade fzf'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "fzf"
+
+[[component]]
+name = "uv"
+desc = "Extremely fast Python package installer and resolver"
+binary = "uv"
+local_cmd = "uv --version"
+local_regex = 'uv\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+upgrade_note = "uv 官方 install.sh"
+
+[component.latest]
+type = "github_release"
+repo = "astral-sh/uv"
+tag_prefix = ""
+
+[[component]]
+name = "ripgrep"
+desc = "Line-oriented search tool"
+binary = "rg"
+local_cmd = "rg --version"
+local_regex = 'ripgrep\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade ripgrep'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "ripgrep"
+
+[[component]]
+name = "eza"
+desc = "Modern replacement for ls"
+binary = "eza"
+local_cmd = "eza --version"
+local_regex = 'v(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade eza'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "eza"

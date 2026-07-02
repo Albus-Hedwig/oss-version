@@ -1,0 +1,55 @@
+# Go development toolchain preset.
+# Import with: oss-version preset import go-dev
+
+[[component]]
+name = "go"
+desc = "Go programming language"
+binary = "go"
+local_cmd = "go version"
+local_regex = 'go\d+\.(\d+\.\d+)'
+upgrade_cmd = 'brew upgrade go'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "go"
+
+[[component]]
+name = "gofmt"
+desc = "Go code formatter"
+binary = "gofmt"
+local_cmd = "gofmt -version 2>&1 || go version"
+local_regex = 'go\d+\.(\d+\.\d+)'
+upgrade_cmd = 'brew upgrade go'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "go"
+
+[[component]]
+name = "golangci-lint"
+desc = "Fast linters runner for Go"
+binary = "golangci-lint"
+local_cmd = "golangci-lint --version"
+local_regex = 'golangci-lint\s+has\s+version\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade golangci-lint'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "golangci-lint"
+
+[[component]]
+name = "air"
+desc = "Live reload for Go apps"
+binary = "air"
+local_cmd = "air -v"
+local_regex = 'v(\d+\.\d+\.\d+)'
+upgrade_cmd = 'go install github.com/cosmtrek/air@latest'
+upgrade_note = "go install"
+
+[component.latest]
+type = "github_release"
+repo = "air-verse/air"
+tag_prefix = "v"

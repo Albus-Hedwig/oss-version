@@ -1,17 +1,17 @@
 ---
 name: oss-version
-description: 检查、升级、管理本地开源组件的版本（rtk / agent-reach / codegraph 等，可扩展）。输出本地版本 vs 最新版本对照表、按需升级、列出已登记组件、添加或编辑组件清单。Use when user says "检查组件版本" / "组件版本对照" / "rtk/codegraph/agent-reach 有没有更新" / "升级 rtk" / "升级 codegraph" / "开源组件版本" / "哪些组件该更新了" / "列出组件清单" / "我装了哪些组件" / "加个组件到清单" / "新增 XXX 到组件管理" / "编辑组件配置", or wants to check/update versions of, or manage the registry of, locally-installed open-source CLI tools managed by this skill.
+description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / agent-reach / codegraph 等任意工具，可扩展）。输出本地版本 vs 最新版本对照表、按需升级、列出已登记组件、添加或编辑组件清单、导入 preset、自动发现 PATH 中的工具。Use when user says "检查组件版本" / "组件版本对照" / "rtk/codegraph/agent-reach 有没有更新" / "升级 <tool>" / "开源组件版本" / "哪些组件该更新了" / "列出组件清单" / "我装了哪些组件" / "加个组件到清单" / "新增 XXX 到组件管理" / "编辑组件配置" / "导入 preset" / "发现本地工具", or wants to check/update versions of, manage the registry of, import presets for, or discover locally-installed open-source CLI tools managed by this skill.
 ---
 
-# oss-version：开源组件版本管理
+# oss-version：开源 CLI 组件版本管理
 
-管理 `~/.claude/skills/oss-version/components.toml` 中登记的本地开源 CLI 组件。脚本位置：`scripts/oss-version.py`，用 uv 的 Python 3.12 执行。
+通用框架：管理 `~/.claude/skills/oss-version/components.toml` 中登记的任意本地开源 CLI 组件。脚本位置：`scripts/oss-version.py`（也可用 `oss-version` 命令，如果已 pip/uv 安装）。
 
-## 四个动作
+## 动作
 
 ### A. 检查版本
 
-用户问"检查组件版本"、"有没有更新"、"rtk/codegraph/agent-reach 最新版是什么"时：
+用户问"检查组件版本"、"有没有更新"、"<tool> 最新版是什么"时：
 
 1. 运行：
    ```bash
@@ -22,7 +22,7 @@ description: 检查、升级、管理本地开源组件的版本（rtk / agent-r
 
 ### B. 升级组件
 
-用户说"升级 rtk"、"升级 codegraph"、"全部升级"时：
+用户说"升级 <tool>"、"全部升级"时：
 
 1. 如果还没跑过 `check`，先跑 `check` 拿到 outdated 列表。
 2. **逐个确认**。对每个 outdated 组件问用户："是否升级 `<name>`？命令是 `<upgrade_cmd>`。"
@@ -44,11 +44,11 @@ description: 检查、升级、管理本地开源组件的版本（rtk / agent-r
    /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py list
    ```
 2. 把清单转给用户。
-3. 附提示："要查版本用 `check`，要加组件告诉我'加个 XXX'。"
+3. 附提示："要查版本用 `check`，要加组件告诉我'加个 XXX'，要导入 preset 说'导入 dev-tools preset'。"
 
 ### D. 添加 / 编辑组件
 
-用户说"加个组件到清单"、"新增 XXX 到组件管理"、"编辑 rtk 配置"时：
+用户说"加个组件到清单"、"新增 XXX 到组件管理"、"编辑 <tool> 配置"时：
 
 1. **收集信息**，必须问清：
    - `name`：组件唯一标识（如 `mytool`）
@@ -56,11 +56,14 @@ description: 检查、升级、管理本地开源组件的版本（rtk / agent-r
    - `local_cmd`：拿本地版本号的命令（如 `mytool --version`）
    - `local_regex`：从命令输出提取版本号的正则（第一个捕获组，如 `(\d+\.\d+\.\d+)`）
    - `latest` 来源类型和参数：
-     - GitHub releases → `github_release`，需要 `repo`（如 `org/repo`）和可选 `tag_prefix`
-     - 工具自带检查命令 → `builtin_check`，需要 `cmd` 和 `regex`
-     - GitHub raw 文件 → `github_raw`，需要 `repo`、`branch`、`file`、`regex`
-     - PyPI → `pypi`，需要 `package`
-     - crates.io → `crates`，需要 `crate`
+     - `github_release`：需要 `repo`（如 `org/repo`）和可选 `tag_prefix`
+     - `github_tag`：需要 `repo` 和可选 `tag_prefix`
+     - `builtin_check`：需要 `cmd` 和 `regex`
+     - `github_raw`：需要 `repo`、`branch`、`file`、`regex`
+     - `pypi`：需要 `package`
+     - `crates`：需要 `crate`
+     - `npm`：需要 `package`
+     - `homebrew`：需要 `formula`
    - `upgrade_cmd`：升级要执行的命令
    - `upgrade_note`：升级命令的说明（可选）
 
@@ -72,6 +75,28 @@ description: 检查、升级、管理本地开源组件的版本（rtk / agent-r
 
 4. 告诉用户："`<name>` 已加入清单，之后 `check` 会自动覆盖它。"
 
+### E. 导入 Preset
+
+用户说"导入 dev-tools preset"、"用 preset"、"加载预设"时：
+
+1. 列出可用 presets：`oss-version.py preset list`（会扫描 `~/.claude/skills/oss-version/presets/` 和内置 preset 目录）。
+2. 用户选择后，运行：
+   ```bash
+   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py preset import <name-or-path>
+   ```
+3. 导入后运行 `check` 验证新组件。
+
+### F. 自动发现 PATH 工具
+
+用户说"发现本地工具"、"扫描 PATH"、"我有哪些工具可以管"时：
+
+1. 运行：
+   ```bash
+   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py discover
+   ```
+2. 把发现的候选组件列表转给用户。
+3. 用户确认要添加哪些后，追加到 `components.toml`。
+
 ## 关键约束
 
 - 脚本路径和 Python 解释器必须写死：
@@ -81,5 +106,4 @@ description: 检查、升级、管理本地开源组件的版本（rtk / agent-r
   不要依赖系统 `python3`（默认是 3.9.6，无 `tomllib`）。
 - `upgrade` 子命令只打印命令，**不自动执行**。必须由用户在确认后，由 Claude 用 Bash 执行。
 - 编辑 `components.toml` 时只改目标组件那一段，保留其他组件。
-- 不管未登记的组件；用户要新增时走"添加组件"流程。
-- `oss-version.py` 优先用标准库 `urllib` 请求 GitHub；若 uv Python 对 `raw.githubusercontent.com` SSL 握手失败，会自动回退到 `curl`。
+- `oss-version.py` 优先用标准库 `urllib` 请求网络；若 uv Python 对 `raw.githubusercontent.com` SSL 握手失败，会自动回退到 `curl`。

@@ -1,0 +1,68 @@
+# Python development toolchain preset.
+# Import with: oss-version preset import python-dev
+
+[[component]]
+name = "uv"
+desc = "Extremely fast Python package installer and resolver"
+binary = "uv"
+local_cmd = "uv --version"
+local_regex = 'uv\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+upgrade_note = "uv 官方 install.sh"
+
+[component.latest]
+type = "github_release"
+repo = "astral-sh/uv"
+tag_prefix = ""
+
+[[component]]
+name = "ruff"
+desc = "An extremely fast Python linter and code formatter"
+binary = "ruff"
+local_cmd = "ruff --version"
+local_regex = 'ruff\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'uv tool upgrade ruff'
+upgrade_note = "uv tool"
+
+[component.latest]
+type = "pypi"
+package = "ruff"
+
+[[component]]
+name = "mypy"
+desc = "Optional static typing for Python"
+binary = "mypy"
+local_cmd = "mypy --version"
+local_regex = 'mypy\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'uv tool upgrade mypy'
+upgrade_note = "uv tool"
+
+[component.latest]
+type = "pypi"
+package = "mypy"
+
+[[component]]
+name = "pyright"
+desc = "Static type checker for Python"
+binary = "pyright"
+local_cmd = "pyright --version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'npm install -g pyright'
+upgrade_note = "npm"
+
+[component.latest]
+type = "npm"
+package = "pyright"
+
+[[component]]
+name = "ipython"
+desc = "Enhanced interactive Python shell"
+binary = "ipython"
+local_cmd = "ipython --version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'uv tool upgrade ipython'
+upgrade_note = "uv tool"
+
+[component.latest]
+type = "pypi"
+package = "ipython"

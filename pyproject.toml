@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "oss-version"
+version = "0.1.0"
+description = "Generic version manager for locally-installed open-source CLI tools"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Albus-Hedwig"}
+]
+keywords = ["cli", "version", "upgrade", "open-source", "tools"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+oss-version = "oss_version:main"
+
+[project.urls]
+Homepage = "https://github.com/Albus-Hedwig/oss-version"
+Repository = "https://github.com/Albus-Hedwig/oss-version"
+Issues = "https://github.com/Albus-Hedwig/oss-version/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["oss_version"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/oss_version",
+    "/scripts",
+    "/presets",
+    "/examples",
+    "/README.md",
+    "/SKILL.md",
+]

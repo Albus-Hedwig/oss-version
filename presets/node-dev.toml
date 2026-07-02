@@ -1,0 +1,67 @@
+# Node.js / frontend development toolchain preset.
+# Import with: oss-version preset import node-dev
+
+[[component]]
+name = "node"
+desc = "Node.js JavaScript runtime"
+binary = "node"
+local_cmd = "node --version"
+local_regex = 'v(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade node'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "homebrew"
+formula = "node"
+
+[[component]]
+name = "npm"
+desc = "Node package manager"
+binary = "npm"
+local_cmd = "npm --version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'brew upgrade node'
+upgrade_note = "Homebrew"
+
+[component.latest]
+type = "npm"
+package = "npm"
+
+[[component]]
+name = "pnpm"
+desc = "Fast, disk space efficient package manager"
+binary = "pnpm"
+local_cmd = "pnpm --version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'npm install -g pnpm'
+upgrade_note = "npm"
+
+[component.latest]
+type = "npm"
+package = "pnpm"
+
+[[component]]
+name = "typescript"
+desc = "TypeScript language"
+binary = "tsc"
+local_cmd = "tsc --version"
+local_regex = 'Version\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'npm install -g typescript'
+upgrade_note = "npm"
+
+[component.latest]
+type = "npm"
+package = "typescript"
+
+[[component]]
+name = "vite"
+desc = "Next generation frontend tooling"
+binary = "vite"
+local_cmd = "vite --version"
+local_regex = 'vite\/(\d+\.\d+\.\d+)'
+upgrade_cmd = 'npm install -g vite'
+upgrade_note = "npm"
+
+[component.latest]
+type = "npm"
+package = "vite"

@@ -1,0 +1,58 @@
+# Rust development toolchain preset.
+# Import with: oss-version preset import rust-dev
+
+[[component]]
+name = "cargo"
+desc = "Rust package manager"
+binary = "cargo"
+local_cmd = "cargo --version"
+local_regex = 'cargo\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'rustup update'
+upgrade_note = "rustup"
+
+[component.latest]
+type = "github_release"
+repo = "rust-lang/cargo"
+tag_prefix = ""
+
+[[component]]
+name = "rustc"
+desc = "Rust compiler"
+binary = "rustc"
+local_cmd = "rustc --version"
+local_regex = 'rustc\s+\d+\.\d+\.\d+\s+\([^(]+\s+(\d{4}-\d{2}-\d{2})\)'
+upgrade_cmd = 'rustup update'
+upgrade_note = "rustup"
+
+[component.latest]
+type = "github_tag"
+repo = "rust-lang/rust"
+tag_prefix = ""
+
+[[component]]
+name = "clippy"
+desc = "Rust linter"
+binary = "cargo-clippy"
+local_cmd = "cargo clippy --version"
+local_regex = 'clippy\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'rustup update'
+upgrade_note = "rustup"
+
+[component.latest]
+type = "github_tag"
+repo = "rust-lang/rust-clippy"
+tag_prefix = ""
+
+[[component]]
+name = "rustfmt"
+desc = "Rust code formatter"
+binary = "rustfmt"
+local_cmd = "rustfmt --version"
+local_regex = 'rustfmt\s+(\d+\.\d+\.\d+)'
+upgrade_cmd = 'rustup update'
+upgrade_note = "rustup"
+
+[component.latest]
+type = "github_tag"
+repo = "rust-lang/rustfmt"
+tag_prefix = ""
