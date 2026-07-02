@@ -635,21 +635,59 @@ def cmd_preset_import(name_or_path: str) -> int:
         if comp_name in existing:
             skipped.append(comp_name)
         else:
-            added.append(comp_name)
+            added.append(raw)
+            existing.add(comp_name)
 
     if not added:
         print(f"All components from {path.name} already exist in {CONFIG_PATH}")
         return 0
 
-    # Append raw TOML text
+    # Build TOML text from non-duplicate components only
+    def _toml_string(value: str) -> str:
+        # Use TOML literal single-quoted strings for values containing backslashes
+        # (common in regexes) to avoid escape-sequence issues.
+        if "\\" in value:
+            if "'" in value:
+                # Mixed: fall back to double-quoted with escaped backslashes.
+                return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+            return "'" + value + "'"
+        if "'" in value:
+            return '"' + value.replace('"', '\\"') + '"'
+        return "'" + value + "'"
+
+    def _render_raw_component(raw: dict) -> str:
+        lines = ["[[component]]"]
+        for key, value in raw.items():
+            if key == "latest":
+                continue
+            if isinstance(value, str):
+                lines.append(f"{key} = {_toml_string(value)}")
+            else:
+                lines.append(f"{key} = {value}")
+        latest = raw.get("latest", {})
+        if latest:
+            lines.append("")
+            lines.append("[component.latest]")
+            for key, value in latest.items():
+                if isinstance(value, str):
+                    lines.append(f"{key} = {_toml_string(value)}")
+                else:
+                    lines.append(f"{key} = {value}")
+        return "\n".join(lines)
+
+    blocks = [_render_raw_component(raw) for raw in added]
+    toml_text = "\n\n".join(blocks)
+
+    # Append filtered TOML text
     with CONFIG_PATH.open("a", encoding="utf-8") as out:
         out.write("\n")
         out.write(f"# Imported from preset: {path.name}\n")
-        out.write(path.read_text(encoding="utf-8"))
+        out.write(toml_text)
         out.write("\n")
 
+    added_names = [raw.get("name") for raw in added]
     print(f"Imported {len(added)} component(s) from {path.name}:")
-    for name in added:
+    for name in added_names:
         print(f"  + {name}")
     if skipped:
         print(f"Skipped {len(skipped)} duplicate(s):")

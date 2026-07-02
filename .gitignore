@@ -5,3 +5,7 @@ __pycache__/
 build/
 dist/
 .DS_Store
+
+# User-local configuration — do not commit personal tool registries
+components.toml
+examples/my-dev-tools.toml
