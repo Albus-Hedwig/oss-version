@@ -1,0 +1,43 @@
+[[component]]
+name = "rtk"
+desc = "Rust Token Killer，CLI 输出压缩代理"
+binary = "rtk"
+local_cmd = "rtk --version"
+local_regex = '(?:rtk\s+)?(\d+\.\d+\.\d+)'
+upgrade_cmd = 'curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh'
+upgrade_note = "从 rtk-ai/rtk GitHub 官方 install.sh 重装"
+
+[component.latest]
+type = "github_release"
+repo = "rtk-ai/rtk"
+tag_prefix = "v"
+
+[[component]]
+name = "agent-reach"
+desc = "多平台联网检索 skill 的后端"
+binary = "agent-reach"
+local_cmd = "agent-reach --version"
+local_regex = 'v?(\d+\.\d+\.\d+)'
+upgrade_cmd = 'uv tool upgrade --force agent-reach'
+upgrade_note = "uv tool 从 GitHub main 强制重装（非 PyPI，需 --force）"
+
+[component.latest]
+type = "github_raw"
+repo = "Panniantong/agent-reach"
+branch = "main"
+file = "agent_reach/__init__.py"
+regex = '__version__\s*=\s*"(\d+\.\d+\.\d+)"'
+
+[[component]]
+name = "codegraph"
+desc = "代码符号知识图谱 MCP server"
+binary = "codegraph"
+local_cmd = "codegraph version"
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'codegraph upgrade'
+upgrade_note = "codegraph 自带升级器"
+
+[component.latest]
+type = "builtin_check"
+cmd = "codegraph upgrade --check"
+regex = 'latest\s+v?(\d+\.\d+\.\d+)'
