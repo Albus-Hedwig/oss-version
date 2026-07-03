@@ -36,6 +36,9 @@ Homepage = "https://github.com/Albus-Hedwig/oss-version"
 Repository = "https://github.com/Albus-Hedwig/oss-version"
 Issues = "https://github.com/Albus-Hedwig/oss-version/issues"
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["oss_version"]
 

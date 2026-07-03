@@ -52,7 +52,7 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 
 1. **收集信息**，必须问清：
    - `name`：组件唯一标识（如 `mytool`）
-   - `binary`：可执行文件名（如 `mytool`）
+   - `binary`：可执行文件名（如 `mytool`）。**可选**：对于 GUI app、Docker 服务等非 PATH 工具，可以省略 `binary`，由 `local_cmd` 的退出码判断是否存在。
    - `local_cmd`：拿本地版本号的命令（如 `mytool --version`）
    - `local_regex`：从命令输出提取版本号的正则（第一个捕获组，如 `(\d+\.\d+\.\d+)`）
    - `latest` 来源类型和参数：
@@ -64,7 +64,10 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
      - `crates`：需要 `crate`
      - `npm`：需要 `package`
      - `homebrew`：需要 `formula`
-   - `upgrade_cmd`：升级要执行的命令
+   - `upgrade_cmd`：升级要执行的命令。支持模板变量：
+     - `{version}`：最新版本号（去掉 `tag_prefix` 后的纯版本，如 `3.16.5`）
+     - `{tag}`：原始 release tag（如 `v3.16.5`）
+     - `{repo}`：来源 repo（如 `farion1231/cc-switch`）
    - `upgrade_note`：升级命令的说明（可选）
 
 2. **修改 `components.toml`**：

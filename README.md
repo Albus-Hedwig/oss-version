@@ -49,6 +49,30 @@ repo = "owner/repo"
 tag_prefix = "v"
 ```
 
+`binary` is optional. For GUI apps, Docker-based tools, or anything not on PATH, omit `binary` and let `local_cmd` determine whether the component is installed.
+
+`upgrade_cmd` supports template variables:
+
+- `{version}` — latest version with `tag_prefix` stripped (e.g. `3.16.5`)
+- `{tag}` — raw release tag (e.g. `v3.16.5`)
+- `{repo}` — source repo slug (e.g. `owner/repo`)
+
+Example for a macOS GUI app:
+
+```toml
+[[component]]
+name = "cc-switch"
+desc = "CC Switch AI CLI manager"
+local_cmd = 'defaults read "/Applications/CC Switch.app/Contents/Info" CFBundleShortVersionString'
+local_regex = '(\d+\.\d+\.\d+)'
+upgrade_cmd = 'bash -c "curl -fsSL -o /tmp/CC-Switch-{tag}-macOS.dmg https://github.com/farion1231/cc-switch/releases/download/{tag}/CC-Switch-{tag}-macOS.dmg; open /tmp/CC-Switch-{tag}-macOS.dmg"'
+
+[component.latest]
+type = "github_release"
+repo = "farion1231/cc-switch"
+tag_prefix = "v"
+```
+
 Supported `latest.type` values:
 
 | Type | Fields | Source |

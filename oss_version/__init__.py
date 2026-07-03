@@ -186,7 +186,7 @@ KNOWN_TOOLS: dict[str, dict] = {
 class Component:
     name: str
     desc: str
-    binary: str
+    binary: str | None
     local_cmd: str
     local_regex: str
     upgrade_cmd: str
@@ -272,45 +272,75 @@ def run_shell(cmd: str, timeout: int = 20) -> tuple[int, str, str]:
     return proc.returncode, proc.stdout, proc.stderr
 
 
+def render_upgrade_cmd(cmd: str, comp: Component, latest: str, tag: str = "") -> str:
+    """Substitute template variables in an upgrade command.
+
+    Supported placeholders:
+      - {version}: latest version string with tag_prefix stripped
+      - {tag}:     raw release tag (e.g. v3.16.5); falls back to {version} if not provided
+      - {repo}:    repo slug for github_release/github_tag/github_raw sources
+    """
+    if not tag:
+        tag = latest
+    repo = comp.latest_cfg.get("repo", "")
+    return cmd.replace("{version}", latest).replace("{tag}", tag).replace("{repo}", repo)
+
+
 # ---------------------------------------------------------------------------
 # Version resolution
 # ---------------------------------------------------------------------------
 
 
+def _looks_not_installed(output: str) -> bool:
+    """Heuristically decide whether a failed local_cmd means 'not installed'."""
+    lowered = output.lower()
+    indicators = [
+        "command not found",
+        "not installed",
+        "does not exist",
+        "no such file",
+        "cannot find",
+        "unable to find",
+        "is not recognized",
+        "not a valid",
+    ]
+    return any(ind in lowered for ind in indicators)
+
+
 def get_local_version(comp: Component) -> dict:
     """Detect local installed version of a component."""
-    binary_path = shutil.which(comp.binary)
-    if not binary_path:
+    code, stdout, stderr = run_shell(comp.local_cmd)
+    output = (stdout or "") + (stderr or "")
+    version = parse_version(output, comp.local_regex)
+
+    if code == 0 and version:
+        return {
+            "name": comp.name,
+            "local": version,
+            "latest": None,
+            "status": "pending",
+            "source": "",
+            "upgrade_cmd": comp.upgrade_cmd,
+            "upgrade_note": comp.upgrade_note,
+        }
+
+    if code != 0 and _looks_not_installed(output):
         return {
             "name": comp.name,
             "local": "-",
             "latest": "-",
             "status": "not_installed",
-            "source": f"binary not found: {comp.binary}",
-            "upgrade_cmd": comp.upgrade_cmd,
-            "upgrade_note": comp.upgrade_note,
-        }
-
-    code, stdout, stderr = run_shell(comp.local_cmd)
-    output = stdout or stderr or ""
-    version = parse_version(output, comp.local_regex)
-    if not version:
-        return {
-            "name": comp.name,
-            "local": "-",
-            "latest": "-",
-            "status": "error",
-            "source": f"local regex did not match output: {output!r}",
+            "source": f"local command indicates not installed: {comp.local_cmd!r}",
             "upgrade_cmd": comp.upgrade_cmd,
             "upgrade_note": comp.upgrade_note,
         }
 
     return {
         "name": comp.name,
-        "local": version,
-        "latest": None,
-        "status": "pending",
-        "source": "",
+        "local": "-",
+        "latest": "-",
+        "status": "error",
+        "source": f"local regex did not match output: {output!r}" if not version else f"local command failed (exit {code}): {output!r}",
         "upgrade_cmd": comp.upgrade_cmd,
         "upgrade_note": comp.upgrade_note,
     }
@@ -333,6 +363,7 @@ def fetch_latest(comp: Component) -> dict:
                 version = tag
             return {
                 "latest": version or None,
+                "tag": tag,
                 "source": f"github_release:{repo}",
                 "error": None,
             }
@@ -347,6 +378,7 @@ def fetch_latest(comp: Component) -> dict:
             version = parse_version(text, pattern)
             return {
                 "latest": version,
+                "tag": "",
                 "source": f"github_raw:{repo}",
                 "error": None,
             }
@@ -363,6 +395,7 @@ def fetch_latest(comp: Component) -> dict:
                 version = tag
             return {
                 "latest": version or None,
+                "tag": tag,
                 "source": f"github_tag:{repo}",
                 "error": None,
             }
@@ -376,6 +409,7 @@ def fetch_latest(comp: Component) -> dict:
             version = parse_version(output, pattern)
             return {
                 "latest": version,
+                "tag": "",
                 "source": "builtin_check",
                 "error": None,
             }
@@ -387,6 +421,7 @@ def fetch_latest(comp: Component) -> dict:
             version = data.get("info", {}).get("version")
             return {
                 "latest": version,
+                "tag": "",
                 "source": f"pypi:{package}",
                 "error": None,
             }
@@ -400,6 +435,7 @@ def fetch_latest(comp: Component) -> dict:
             version = data.get("crate", {}).get("max_version")
             return {
                 "latest": version,
+                "tag": "",
                 "source": f"crates:{crate}",
                 "error": None,
             }
@@ -411,6 +447,7 @@ def fetch_latest(comp: Component) -> dict:
             version = data.get("dist-tags", {}).get("latest")
             return {
                 "latest": version,
+                "tag": "",
                 "source": f"npm:{package}",
                 "error": None,
             }
@@ -426,6 +463,7 @@ def fetch_latest(comp: Component) -> dict:
                         if version:
                             return {
                                 "latest": version,
+                                "tag": "",
                                 "source": f"homebrew:{formula}",
                                 "error": None,
                             }
@@ -435,18 +473,21 @@ def fetch_latest(comp: Component) -> dict:
             version = parse_version(output, r"[\s/:](\d+\.\d+(?:\.\d+)?)")
             return {
                 "latest": version,
+                "tag": "",
                 "source": f"homebrew:{formula}",
                 "error": None,
             }
 
         return {
             "latest": None,
+            "tag": "",
             "source": ctype,
             "error": f"unsupported latest type: {ctype}",
         }
     except Exception as exc:  # noqa: BLE001
         return {
             "latest": None,
+            "tag": "",
             "source": ctype,
             "error": f"{type(exc).__name__}: {exc}",
         }
@@ -472,7 +513,7 @@ def load_components() -> list[Component]:
             Component(
                 name=raw["name"],
                 desc=raw.get("desc", ""),
-                binary=raw.get("binary", raw["name"]),
+                binary=raw.get("binary"),
                 local_cmd=raw["local_cmd"],
                 local_regex=raw["local_regex"],
                 upgrade_cmd=raw["upgrade_cmd"],
@@ -511,6 +552,7 @@ def cmd_check() -> int:
         latest_info = latest_futures[idx].result()
         latest = latest_info.get("latest")
         error = latest_info.get("error")
+        tag = latest_info.get("tag", "")
 
         if error or not latest:
             res["latest"] = latest or "-"
@@ -521,6 +563,7 @@ def cmd_check() -> int:
             res["status"] = cmp_version(res["local"], latest)
             res["source"] = latest_info.get("source", "")
 
+        res["upgrade_cmd"] = render_upgrade_cmd(comp.upgrade_cmd, comp, latest or "", tag)
         results.append(res)
 
     # Print table
@@ -560,7 +603,10 @@ def cmd_list() -> int:
     headers = ["NAME", "DESC", "BINARY", "LATEST_TYPE"]
     rows = [headers]
     for c in comps:
-        binary_path = shutil.which(c.binary) or "(not found)"
+        if c.binary is None:
+            binary_path = "(local_cmd)"
+        else:
+            binary_path = shutil.which(c.binary) or f"(binary not in PATH: {c.binary})"
         rows.append([c.name, c.desc, binary_path, c.latest_type])
 
     widths = [max(len(row[i]) for row in rows) for i in range(len(headers))]
@@ -577,9 +623,25 @@ def cmd_upgrade(name: str) -> int:
         print(f"Unknown component: {name}", file=sys.stderr)
         return 1
 
+    latest_info = fetch_latest(comp)
+    error = latest_info.get("error")
+    latest = latest_info.get("latest")
+    tag = latest_info.get("tag", "")
+
+    if error or not latest:
+        print(f"Component: {comp.name}", file=sys.stderr)
+        print(f"Warning: failed to fetch latest version ({error or 'unknown'}).", file=sys.stderr)
+        print("Upgrade command (unrendered):", file=sys.stderr)
+        print(f"  {comp.upgrade_cmd}")
+        if comp.upgrade_note:
+            print(f"Note: {comp.upgrade_note}")
+        return 1
+
+    rendered = render_upgrade_cmd(comp.upgrade_cmd, comp, latest, tag)
+
     print(f"Component: {comp.name}")
     print("Upgrade command (requires confirmation before execution):")
-    print(f"  {comp.upgrade_cmd}")
+    print(f"  {rendered}")
     if comp.upgrade_note:
         print(f"Note: {comp.upgrade_note}")
     print("\nThis command modifies globally-installed binaries. Confirm before running.")
