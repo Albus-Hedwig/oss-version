@@ -15,7 +15,7 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 
 1. 运行：
    ```bash
-   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py check
+   python3 ~/.claude/skills/oss-version/scripts/oss-version.py check
    ```
 2. 把输出的对照表原样转给用户。
 3. `outdated` 的组件进入升级候选；`latest` / `not_installed` / `error` 的跳过并说明原因。
@@ -28,7 +28,7 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 2. **逐个确认**。对每个 outdated 组件问用户："是否升级 `<name>`？命令是 `<upgrade_cmd>`。"
 3. 用户确认后，先运行：
    ```bash
-   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py upgrade <name>
+   python3 ~/.claude/skills/oss-version/scripts/oss-version.py upgrade <name>
    ```
    获取待执行的升级命令。
 4. 用 Bash 执行打印出的 `upgrade_cmd`。
@@ -41,7 +41,7 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 
 1. 运行：
    ```bash
-   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py list
+   python3 ~/.claude/skills/oss-version/scripts/oss-version.py list
    ```
 2. 把清单转给用户。
 3. 附提示："要查版本用 `check`，要加组件告诉我'加个 XXX'，要导入 preset 说'导入 dev-tools preset'。"
@@ -85,7 +85,7 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 1. 列出可用 presets：`oss-version.py preset list`（会扫描 `~/.claude/skills/oss-version/presets/` 和内置 preset 目录）。
 2. 用户选择后，运行：
    ```bash
-   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py preset import <name-or-path>
+   python3 ~/.claude/skills/oss-version/scripts/oss-version.py preset import <name-or-path>
    ```
 3. 导入后运行 `check` 验证新组件。
 
@@ -95,18 +95,19 @@ description: 检查、升级、管理本地开源 CLI 组件的版本（rtk / ag
 
 1. 运行：
    ```bash
-   /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py discover
+   python3 ~/.claude/skills/oss-version/scripts/oss-version.py discover
    ```
 2. 把发现的候选组件列表转给用户。
 3. 用户确认要添加哪些后，追加到 `components.toml`。
 
 ## 关键约束
 
-- 脚本路径和 Python 解释器必须写死：
+- 使用 Python 3.11+。安装时确认 `python3 --version` 满足要求；若系统 `python3` 版本较旧，使用本机可用的 Python 3.11+ 解释器替换下列命令中的 `python3`：
   ```bash
-  /Users/chenhaoyu/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/bin/python3.12 ~/.claude/skills/oss-version/scripts/oss-version.py
+  python3 ~/.claude/skills/oss-version/scripts/oss-version.py
   ```
-  不要依赖系统 `python3`（默认是 3.9.6，无 `tomllib`）。
+  Python 3.10 及更早版本没有脚本需要的 `tomllib`。不要假定解释器的绝对路径或系统默认版本。
 - `upgrade` 子命令只打印命令，**不自动执行**。必须由用户在确认后，由 Claude 用 Bash 执行。
 - 编辑 `components.toml` 时只改目标组件那一段，保留其他组件。
 - `oss-version.py` 优先用标准库 `urllib` 请求网络；若 uv Python 对 `raw.githubusercontent.com` SSL 握手失败，会自动回退到 `curl`。
+
